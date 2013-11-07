@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.utils import unittest
 from django.utils import translation
 from django.template import Template, Context
@@ -45,6 +47,12 @@ class PrettyTimeTests(unittest.TestCase):
 
         dt = datetime.utcnow().replace(tzinfo=UTC())
         self.assertEqual("just now", self.apply_prettytime(dt))
+
+    def pluralization_first_form_in_polish_test(self):
+        self.assertEqual("słoń", pretty.pluralization(1, "słoń,słonie,słoni,samolotów"))
+
+    def pluralization_second_form_in_polish_test(self):
+        self.assertEqual("dni", pretty.pluralization(0, "dzień,dni"))
 
     def test_ten_seconds_ago(self):
         self.assertEqual("10 seconds ago", self.get_past_result(seconds=10))

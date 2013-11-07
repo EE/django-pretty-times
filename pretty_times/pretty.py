@@ -62,11 +62,11 @@ def get_large_increments(days, past):
     return result
 
 
-def pluralization(n, quantity):
+def pluralization(n, form):
     #supports pl
-    bits = quantity.split(',')
+    bits = form.split(',')
     if len(bits) > 3:
-        bits = bits[0:3]
+        bits = bits[:3]
     elif len(bits) == 1:
         bits.append(bits[0])
         bits.append(bits[0])
