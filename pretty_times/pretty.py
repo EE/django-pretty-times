@@ -73,9 +73,9 @@ def pluralization(n, form):
     elif len(bits) == 2:
         bits.append(bits[1])
 
-    if n==1:
+    if n == 1:
         return bits[0]
-    elif n%10>=2 and n%10<=4 and (n%100<10 or n%100>=20):
+    elif n % 10 >= 2 and n % 10 <= 4 and (n % 100 < 10 or n % 100 >= 20):
         return bits[1]
     else:
         return bits[2]
