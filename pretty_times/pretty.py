@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# CoAuthor Robert Tomkowski <robert.tomkowski@laboratorium.ee>
 from datetime import datetime
 from django.utils.translation import pgettext, ugettext as _
 
