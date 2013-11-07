@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.utils import unittest
 from django.utils import translation
 from django.template import Template, Context
@@ -46,6 +48,12 @@ class PrettyTimeTests(unittest.TestCase):
         dt = datetime.utcnow().replace(tzinfo=UTC())
         self.assertEqual("just now", self.apply_prettytime(dt))
 
+    def pluralization_first_form_in_polish_test(self):
+        self.assertEqual("słoń", pretty.pluralization(1, "słoń,słonie,słoni,samolotów"))
+
+    def pluralization_second_form_in_polish_test(self):
+        self.assertEqual("dni", pretty.pluralization(0, "dzień,dni"))
+
     def test_ten_seconds_ago(self):
         self.assertEqual("10 seconds ago", self.get_past_result(seconds=10))
 
@@ -63,6 +71,34 @@ class PrettyTimeTests(unittest.TestCase):
         try:
             translation.activate('fr')
             self.assertEqual("il y a 10 secondes", self.get_past_result(seconds=10))
+        finally:
+            translation.activate('en')
+
+    def test_polish_in_ten_second(self):
+        try:
+            translation.activate('pl')
+            self.assertEqual("za 10 sekund", self.get_future_result(seconds=10))
+        finally:
+            translation.activate('en')
+
+    def test_polish_ten_seconds_ago(self):
+        try:
+            translation.activate('pl')
+            self.assertEqual("za 10 sekund", self.get_future_result(seconds=10))
+        finally:
+            translation.activate('en')
+
+    def test_polish_in_two_second(self):
+        try:
+            translation.activate('pl')
+            self.assertEqual("za 22 sekundy", self.get_future_result(seconds=22))
+        finally:
+            translation.activate('en')
+
+    def test_polish_two_seconds_ago(self):
+        try:
+            translation.activate('pl')
+            self.assertEqual("22 sekundy temu", self.get_past_result(seconds=22))
         finally:
             translation.activate('en')
 
