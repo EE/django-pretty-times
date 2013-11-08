@@ -81,7 +81,7 @@ msgstr "ponad miesiąc temu"
 
 #: pretty.py:53
 msgid "next month"
-msgstr "za ponad miesiąć"
+msgstr "za ponad miesiąc"
 
 #: pretty.py:55
 msgid "months"
