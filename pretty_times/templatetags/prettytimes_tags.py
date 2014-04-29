@@ -6,5 +6,5 @@ register = Library()
 
 
 @register.filter
-def relative_time(datetime_arg):
-    return pretty.date(datetime_arg)
+def relative_time(datetime_arg, accuracy=None):
+    return pretty.date(datetime_arg, accuracy)
