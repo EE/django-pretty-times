@@ -8,6 +8,8 @@ for path in (grandparent, parent):
     if path not in sys.path:
         sys.path.insert(0, path)
 
+SECRET_KEY = 'examplesecretkey'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',

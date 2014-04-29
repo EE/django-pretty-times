@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
+import operator
+
 from django.utils import unittest
 from django.utils import translation
 from django.template import Template, Context
 from pretty_times import pretty
 from datetime import datetime, timedelta, tzinfo
-import operator
 
 
 class PrettyTimeTests(unittest.TestCase):
@@ -14,7 +16,7 @@ class PrettyTimeTests(unittest.TestCase):
         return self.get_result(operator.sub, **kwargs)
 
     def get_future_result(self, **kwargs):
-        #because the gap between now and the future is rapidly closing
+        # because the gap between now and the future is rapidly closing
         if 'seconds' in kwargs:
             kwargs['seconds'] += 1
         else:
@@ -23,14 +25,15 @@ class PrettyTimeTests(unittest.TestCase):
         return self.get_result(operator.add, **kwargs)
 
     def get_result(self, op, **kwargs):
+        accuracy = kwargs.pop('accuracy', None)
         my_datetime = op(datetime.today(), timedelta(**kwargs))
-        return self.apply_prettytime(my_datetime)
+        return self.apply_prettytime(my_datetime, accuracy=accuracy)
 
-    def apply_prettytime(self, my_datetime):
-        return pretty.date(my_datetime)
+    def apply_prettytime(self, my_datetime, accuracy=None):
+        return pretty.date(my_datetime, accuracy=accuracy)
 
     def test_now(self):
-        self.assertEqual("just now", self.apply_prettytime(datetime.today()))
+        self.assertEqual('just now', self.apply_prettytime(datetime.today()))
 
     def test_now_tz(self):
         """test that non-naive datetimes are handled"""
@@ -46,152 +49,164 @@ class PrettyTimeTests(unittest.TestCase):
                 return timedelta(0)
 
         dt = datetime.utcnow().replace(tzinfo=UTC())
-        self.assertEqual("just now", self.apply_prettytime(dt))
+        self.assertEqual('just now', self.apply_prettytime(dt))
 
-    def pluralization_first_form_in_polish_test(self):
-        self.assertEqual("słoń", pretty.pluralization(1, "słoń,słonie,słoni,samolotów"))
-
-    def pluralization_second_form_in_polish_test(self):
-        self.assertEqual("dni", pretty.pluralization(0, "dzień,dni"))
+    def test_raise_accuracy_value_error(self):
+        with self.assertRaises(ValueError):
+            self.get_past_result(seconds=10, accuracy='error')
 
     def test_ten_seconds_ago(self):
-        self.assertEqual("10 seconds ago", self.get_past_result(seconds=10))
+        self.assertEqual('10 seconds ago', self.get_past_result(seconds=10))
 
     def test_in_ten_seconds(self):
-        self.assertEqual("in 10 seconds", self.get_future_result(seconds=10))
+        self.assertEqual('in 10 seconds', self.get_future_result(seconds=10))
 
     def test_french_in_ten_second(self):
         try:
             translation.activate('fr')
-            self.assertEqual("dans 10 secondes", self.get_future_result(seconds=10))
+            self.assertEqual('dans 10 secondes', self.get_future_result(seconds=10))
         finally:
             translation.activate('en')
 
     def test_french_ten_seconds_ago(self):
         try:
             translation.activate('fr')
-            self.assertEqual("il y a 10 secondes", self.get_past_result(seconds=10))
+            self.assertEqual('il y a 10 secondes', self.get_past_result(seconds=10))
         finally:
             translation.activate('en')
 
     def test_polish_in_ten_second(self):
         try:
             translation.activate('pl')
-            self.assertEqual("za 10 sekund", self.get_future_result(seconds=10))
+            self.assertEqual('za 10 sekund', self.get_future_result(seconds=10))
         finally:
             translation.activate('en')
 
     def test_polish_ten_seconds_ago(self):
         try:
             translation.activate('pl')
-            self.assertEqual("za 10 sekund", self.get_future_result(seconds=10))
+            self.assertEqual('za 10 sekund', self.get_future_result(seconds=10))
         finally:
             translation.activate('en')
 
     def test_polish_in_two_second(self):
         try:
             translation.activate('pl')
-            self.assertEqual("za 22 sekundy", self.get_future_result(seconds=22))
+            self.assertEqual('za 22 sekundy', self.get_future_result(seconds=22))
         finally:
             translation.activate('en')
 
     def test_polish_two_seconds_ago(self):
         try:
             translation.activate('pl')
-            self.assertEqual("22 sekundy temu", self.get_past_result(seconds=22))
+            self.assertEqual('22 sekundy temu', self.get_past_result(seconds=22))
+        finally:
+            translation.activate('en')
+
+    def test_polish_forty_hours_ago(self):
+        try:
+            translation.activate('pl')
+            self.assertEqual('40 godzin temu', self.get_past_result(hours=40, accuracy='hours'))
+        finally:
+            translation.activate('en')
+
+    def test_polish_in_forty_two_hours(self):
+        try:
+            translation.activate('pl')
+            self.assertEqual('za 42 godziny', self.get_future_result(hours=42, accuracy='hours'))
         finally:
             translation.activate('en')
 
     def test_thirty_seconds_ago(self):
-        self.assertEqual("30 seconds ago", self.get_past_result(seconds=30))
+        self.assertEqual('30 seconds ago', self.get_past_result(seconds=30))
 
     def test_in_thirty_seconds(self):
-        self.assertEqual("in 30 seconds", self.get_future_result(seconds=30))
+        self.assertEqual('in 30 seconds', self.get_future_result(seconds=30))
 
     def test_one_minute_ago(self):
-        self.assertEqual("a minute ago", self.get_past_result(minutes=1))
+        self.assertEqual('a minute ago', self.get_past_result(minutes=1))
 
     def test_in_one_minute(self):
-        self.assertEqual("in a minute", self.get_future_result(minutes=1))
+        self.assertEqual('in a minute', self.get_future_result(minutes=1))
 
     def test_two_minutes_ago(self):
-        self.assertEqual("2 minutes ago", self.get_past_result(minutes=2))
+        self.assertEqual('2 minutes ago', self.get_past_result(minutes=2))
 
     def test_in_two_minutes(self):
-        self.assertEqual("in 2 minutes", self.get_future_result(minutes=2))
+        self.assertEqual('in 2 minutes', self.get_future_result(minutes=2))
 
     def test_one_hour_ago(self):
-        self.assertEqual("an hour ago", self.get_past_result(hours=1))
+        self.assertEqual('an hour ago', self.get_past_result(hours=1))
 
     def test_in_one_hour(self):
-        self.assertEqual("in an hour", self.get_future_result(hours=1))
+        self.assertEqual('in an hour', self.get_future_result(hours=1))
 
     def test_two_hours_ago(self):
-        self.assertEqual("2 hours ago", self.get_past_result(hours=2))
+        self.assertEqual('2 hours ago', self.get_past_result(hours=2))
 
     def test_in_two_hours(self):
-        self.assertEqual("in 2 hours", self.get_future_result(hours=2))
+        self.assertEqual('in 2 hours', self.get_future_result(hours=2))
 
     def test_yesterday(self):
-        self.assertEqual("yesterday", self.get_past_result(days=1))
+        self.assertEqual('yesterday', self.get_past_result(days=1))
 
     def test_tomorrow(self):
-        self.assertEqual("tomorrow", self.get_future_result(days=1))
+        self.assertEqual('tomorrow', self.get_future_result(days=1))
 
     def test_next_week(self):
-        self.assertEqual("next week", self.get_future_result(days=8))
+        self.assertEqual('next week', self.get_future_result(days=8))
 
     def test_two_weeks_ago(self):
-        self.assertEqual("2 weeks ago", self.get_past_result(days=15))
+        self.assertEqual('2 weeks ago', self.get_past_result(days=15))
 
     def test_in_two_weeks(self):
-        self.assertEqual("in 2 weeks", self.get_future_result(days=15))
+        self.assertEqual('in 2 weeks', self.get_future_result(days=15))
 
     def test_last_week(self):
-        self.assertEqual("last week", self.get_past_result(days=8))
+        self.assertEqual('last week', self.get_past_result(days=8))
 
     def test_two_days_ago(self):
-        self.assertEqual("2 days ago", self.get_past_result(days=2))
+        self.assertEqual('2 days ago', self.get_past_result(days=2))
 
     def test_in_two_days(self):
-        self.assertEqual("in 2 days", self.get_future_result(days=2))
+        self.assertEqual('in 2 days', self.get_future_result(days=2))
 
     def test_three_days_ago(self):
-        self.assertEqual("3 days ago", self.get_past_result(days=3))
+        self.assertEqual('3 days ago', self.get_past_result(days=3))
 
     def test_in_three_days(self):
-        self.assertEqual("in 3 days", self.get_future_result(days=3))
+        self.assertEqual('in 3 days', self.get_future_result(days=3))
 
     def test_last_month(self):
-        self.assertEqual("last month", self.get_past_result(days=32))
+        self.assertEqual('last month', self.get_past_result(days=32))
 
     def test_next_month(self):
-        self.assertEqual("next month", self.get_future_result(days=32))
+        self.assertEqual('next month', self.get_future_result(days=32))
 
     def test_two_months_ago(self):
-        self.assertEqual("2 months ago", self.get_past_result(days=63))
+        self.assertEqual('2 months ago', self.get_past_result(days=63))
 
     def test_in_two_months(self):
-        self.assertEqual("in 2 months", self.get_future_result(days=63))
+        self.assertEqual('in 2 months', self.get_future_result(days=63))
 
     def test_last_year(self):
-        self.assertEqual("last year", self.get_past_result(days=366))
+        self.assertEqual('last year', self.get_past_result(days=366))
 
     def test_next_year(self):
-        self.assertEqual("next year", self.get_future_result(days=366))
+        self.assertEqual('next year', self.get_future_result(days=366))
 
     def test_two_years_ago(self):
-        self.assertEqual("2 years ago", self.get_past_result(days=733))
+        self.assertEqual('2 years ago', self.get_past_result(days=733))
 
     def test_in_two_years(self):
-        self.assertEqual("in 2 years", self.get_future_result(days=733))
+        self.assertEqual('in 2 years', self.get_future_result(days=733))
 
 
 class PrettyTimeTemplateTagTests(PrettyTimeTests):
 
-    def apply_prettytime(self, my_datetime):
+    def apply_prettytime(self, my_datetime, accuracy=None):
         template = Template("""
         {% load prettytimes_tags %}
-        {{ my_datetime|relative_time }}
+        {{ my_datetime|relative_time:accuracy }}
         """)
-        return template.render(Context(dict(my_datetime=my_datetime))).strip()
+        return template.render(Context(dict(my_datetime=my_datetime, accuracy=accuracy))).strip()
